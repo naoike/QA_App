@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
             String name = (String) map.get("name");
             String uid = (String) map.get("uid");
             String imageString = (String) map.get("image");
+
             byte[] bytes;
             if (imageString != null) {
                 bytes = Base64.decode(imageString, Base64.DEFAULT);

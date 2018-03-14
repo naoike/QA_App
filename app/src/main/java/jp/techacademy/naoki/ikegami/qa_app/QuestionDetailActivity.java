@@ -20,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class QuestionDetailActivity extends AppCompatActivity {
 
@@ -27,6 +28,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
     private Question mQuestion;
     private QuestionDetailListAdapter mAdapter;
     private DatabaseReference mAnswerRef;
+
 
 
     private ChildEventListener mEventListener = new ChildEventListener() {
@@ -78,23 +80,36 @@ public class QuestionDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_question_detail);
 
-        Button button = (Button) findViewById(R.id.button);
+        // ログイン済みのユーザーを取得する
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        final Button button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
+                if( button.getText().toString().equals("お気に入り")){
+
+                    DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+                    DatabaseReference FavoriteRef = dataBaseReference.child(Const.FavoritePATH).child(user.getUid()).child(mQuestion.getQuestionUid());;
+                    FavoriteRef.setValue("お気に入り");
+
+                    button.setText("解除");
+                }else{
+                    DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+                    DatabaseReference FavoriteRef = dataBaseReference.child(Const.FavoritePATH).child(user.getUid()).child(mQuestion.getQuestionUid());;
+                    FavoriteRef.removeValue();
+
+                    button.setText("お気に入り");
+                }
             }
         });
 
-        // ログイン済みのユーザーを取得する
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
         if(user==null){
+
             button.setVisibility(View.INVISIBLE);
         }else{
-         //ログインしている場合にFirebaseからお気に入りしているかを確認するためのリスナーをこちらに記載する。
-         //button については，表示するという処理を追加する。
-        }
 
+        }
 
 
         // 渡ってきたQuestionのオブジェクトを保持する
