@@ -2,7 +2,8 @@ package jp.techacademy.naoki.ikegami.qa_app;
 
 
 import java.io.Serializable;
-public class Answer implements Serializable{
+public class
+Answer implements Serializable{
 
     private String mBody;
     private String mName;

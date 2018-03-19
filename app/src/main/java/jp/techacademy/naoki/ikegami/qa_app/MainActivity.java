@@ -18,6 +18,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     private ListView mListView;
     private ArrayList<Question> mQuestionArrayList;
     private QuestionsListAdapter mAdapter;
+
+    private  Button button;
+
 
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
@@ -125,6 +129,9 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -133,130 +140,151 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // ジャンルを選択していない場合（mGenre == 0）はエラーを表示するだけ
-                if (mGenre == 0) {
-                    Snackbar.make(view, "ジャンルを選択して下さい", Snackbar.LENGTH_LONG).show();
-                    return;
+
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // ジャンルを選択していない場合（mGenre == 0）はエラーを表示するだけ
+                    if (mGenre == 0) {
+                        Snackbar.make(view, "ジャンルを選択して下さい", Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // ログイン済みのユーザーを取得する
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                    if (user == null) {
+                        // ログインしていなければログイン画面に遷移させる
+                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        startActivity(intent);
+                    } else {
+                        // ジャンルを渡して質問作成画面を起動する
+                        Intent intent = new Intent(getApplicationContext(), QuestionSendActivity.class);
+                        intent.putExtra("genre", mGenre);
+                        startActivity(intent);
+                    }
+
                 }
+            });
 
-                // ログイン済みのユーザーを取得する
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-                if (user == null) {
-                    // ログインしていなければログイン画面に遷移させる
-                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+            // ナビゲーションドロワーの設定
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name);
+
+
+            drawer.addDrawerListener(toggle);
+            toggle.syncState();
+
+
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
+
+
+            {
+                @Override
+                public boolean onNavigationItemSelected(MenuItem item) {
+                    int id = item.getItemId();
+
+
+                    if (id == R.id.nav_hobby) {
+                        mToolbar.setTitle("趣味");
+                        mGenre = 1;
+                    } else if (id == R.id.nav_life) {
+                        mToolbar.setTitle("生活");
+                        mGenre = 2;
+                    } else if (id == R.id.nav_health) {
+                        mToolbar.setTitle("健康");
+                        mGenre = 3;
+                    } else if (id == R.id.nav_compter) {
+                        mToolbar.setTitle("コンピューター");
+                        mGenre = 4;
+                    } else if (id == R.id.nav_favorite) {
+                        mToolbar.setTitle("お気に入り");
+                        mGenre = 5;
+                    }
+
+
+                    DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                    drawer.closeDrawer(GravityCompat.START);
+
+                    if (mGenre == 5) {
+
+                        Intent intent = new Intent(getApplicationContext(), FavoriteListActivity.class);
+                        startActivity(intent);
+                        return true;
+
+
+                    }
+
+                    // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
+                    mQuestionArrayList.clear();
+                    mAdapter.setQuestionArrayList(mQuestionArrayList);
+                    mListView.setAdapter(mAdapter);
+
+                    // 選択したジャンルにリスナーを登録する
+                    if (mGenreRef != null) {
+                        mGenreRef.removeEventListener(mEventListener);
+                    }
+                    mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+                    mGenreRef.addChildEventListener(mEventListener);
+                    return true;
+
+
+                }
+            });
+
+
+            // Firebase
+            mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+
+            // ListViewの準備
+            mListView = (ListView) findViewById(R.id.listView);
+            mAdapter = new QuestionsListAdapter(this);
+            mQuestionArrayList = new ArrayList<Question>();
+            mAdapter.notifyDataSetChanged();
+
+
+            mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    // Questionのインスタンスを渡して質問詳細画面を起動する
+                    Intent intent = new Intent(getApplicationContext(), QuestionDetailActivity.class);
+                    intent.putExtra("question", mQuestionArrayList.get(position));
                     startActivity(intent);
-                } else {
-                    // ジャンルを渡して質問作成画面を起動する
-                    Intent intent = new Intent(getApplicationContext(), QuestionSendActivity.class);
-                    intent.putExtra("genre", mGenre);
-                    startActivity(intent);
                 }
+            });
 
-            }
-        });
-
-
-        // ナビゲーションドロワーの設定
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
+        }
 
 
-        {
-            @Override
-            public boolean onNavigationItemSelected(MenuItem item) {
-                int id = item.getItemId();
-
-                if (id == R.id.nav_hobby) {
-                    mToolbar.setTitle("趣味");
-                    mGenre = 1;
-                } else if (id == R.id.nav_life) {
-                    mToolbar.setTitle("生活");
-                    mGenre = 2;
-                } else if (id == R.id.nav_health) {
-                    mToolbar.setTitle("健康");
-                    mGenre = 3;
-                } else if (id == R.id.nav_compter) {
-                    mToolbar.setTitle("コンピューター");
-                    mGenre = 4;
-                }
-
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-                drawer.closeDrawer(GravityCompat.START);
-
-
-                // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
-                mQuestionArrayList.clear();
-                mAdapter.setQuestionArrayList(mQuestionArrayList);
-                mListView.setAdapter(mAdapter);
-
-                // 選択したジャンルにリスナーを登録する
-                if (mGenreRef != null) {
-                    mGenreRef.removeEventListener(mEventListener);
-                }
-                mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
-                mGenreRef.addChildEventListener(mEventListener);
-                return true;
-
-
-            }
-        });
-
-
-        // Firebase
-        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
-
-        // ListViewの準備
-        mListView = (ListView) findViewById(R.id.listView);
-        mAdapter = new QuestionsListAdapter(this);
-        mQuestionArrayList = new ArrayList<Question>();
-        mAdapter.notifyDataSetChanged();
-
-
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // Questionのインスタンスを渡して質問詳細画面を起動する
-                Intent intent = new Intent(getApplicationContext(), QuestionDetailActivity.class);
-                intent.putExtra("question", mQuestionArrayList.get(position));
-                startActivity(intent);
-            }
-        });
-
-    }
-
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-            startActivity(intent);
+        @Override
+        public boolean onCreateOptionsMenu (Menu menu){
+            // Inflate the menu; this adds items to the action bar if it is present.
+            getMenuInflater().inflate(R.menu.menu_main, menu);
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
-    }
+        @Override
+        public boolean onOptionsItemSelected (MenuItem item){
+            // Handle action bar item clicks here. The action bar will
+            // automatically handle clicks on the Home/Up button, so long
+            // as you specify a parent activity in AndroidManifest.xml.
+            int id = item.getItemId();
+
+            //noinspection SimplifiableIfStatement
+            if (id == R.id.action_settings) {
+                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+                startActivity(intent);
+                return true;
+            }
+
+            return super.onOptionsItemSelected(item);
+
+        }
+
+
+
+
 }

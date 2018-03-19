@@ -18,6 +18,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,13 +31,54 @@ public class QuestionDetailActivity extends AppCompatActivity {
     private DatabaseReference mAnswerRef;
 
 
+    private  Button button;
+
+    private ChildEventListener mFavoriteListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+            button.setText("解除");
+
+
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+
+
+
+
+
 
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            HashMap map = (HashMap) dataSnapshot.getValue();
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-            String answerUid = dataSnapshot.getKey();
+
+
+
+
+                HashMap map = (HashMap) dataSnapshot.getValue();
+                String answerUid = dataSnapshot.getKey();
 
             for(Answer answer : mQuestion.getAnswers()) {
                 // 同じAnswerUidのものが存在しているときは何もしない
@@ -75,28 +117,50 @@ public class QuestionDetailActivity extends AppCompatActivity {
         }
     };
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_question_detail);
 
+
+        // 渡ってきたQuestionのオブジェクトを保持する
+        Bundle extras = getIntent().getExtras();
+        mQuestion = (Question) extras.get("question");
+
+        setTitle(mQuestion.getTitle());
+
         // ログイン済みのユーザーを取得する
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        final Button button = (Button) findViewById(R.id.button);
+
+        button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
+
+                DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+                DatabaseReference FavoriteRef = dataBaseReference.child(Const.FavoritePATH).child(user.getUid()).child(mQuestion.getQuestionUid());;
+
+
                 if( button.getText().toString().equals("お気に入り")){
 
-                    DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
-                    DatabaseReference FavoriteRef = dataBaseReference.child(Const.FavoritePATH).child(user.getUid()).child(mQuestion.getQuestionUid());;
-                    FavoriteRef.setValue("お気に入り");
+                    Map<String,String> date = new HashMap<String, String>();
+                    date.put("genre",String.valueOf(mQuestion.getGenre()));
 
+
+
+
+
+
+                    FavoriteRef.setValue(date);
                     button.setText("解除");
+
+
+
                 }else{
-                    DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
-                    DatabaseReference FavoriteRef = dataBaseReference.child(Const.FavoritePATH).child(user.getUid()).child(mQuestion.getQuestionUid());;
+
                     FavoriteRef.removeValue();
 
                     button.setText("お気に入り");
@@ -107,16 +171,21 @@ public class QuestionDetailActivity extends AppCompatActivity {
         if(user==null){
 
             button.setVisibility(View.INVISIBLE);
+
         }else{
+            DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+            DatabaseReference FavoriteRef = dataBaseReference.child(Const.FavoritePATH).child(user.getUid()).child(mQuestion.getQuestionUid());;
+            FavoriteRef.addChildEventListener(mFavoriteListener);
+
+
+            button.setVisibility(View.VISIBLE);
 
         }
 
 
-        // 渡ってきたQuestionのオブジェクトを保持する
-        Bundle extras = getIntent().getExtras();
-        mQuestion = (Question) extras.get("question");
 
-        setTitle(mQuestion.getTitle());
+
+
 
         // ListViewの準備
         mListView = (ListView) findViewById(R.id.listView);
