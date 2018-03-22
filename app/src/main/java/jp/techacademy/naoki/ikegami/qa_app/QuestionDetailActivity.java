@@ -33,12 +33,16 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
     private  Button button;
 
+
+    // ログイン済みのユーザーを取得する
+    final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+
     private ChildEventListener mFavoriteListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
             button.setText("解除");
-
 
 
         }
@@ -131,9 +135,6 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
         setTitle(mQuestion.getTitle());
 
-        // ログイン済みのユーザーを取得する
-        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
 
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
@@ -151,18 +152,15 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
 
 
-
-
-
                     FavoriteRef.setValue(date);
                     button.setText("解除");
+
 
 
 
                 }else{
 
                     FavoriteRef.removeValue();
-
                     button.setText("お気に入り");
                 }
             }

@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
             ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name);
 
 
+
             drawer.addDrawerListener(toggle);
             toggle.syncState();
 
@@ -209,19 +210,20 @@ public class MainActivity extends AppCompatActivity {
                     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
                     drawer.closeDrawer(GravityCompat.START);
 
+
+                    // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
+                    mQuestionArrayList.clear();
+                    mAdapter.setQuestionArrayList(mQuestionArrayList);
+                    mListView.setAdapter(mAdapter);
+
+
                     if (mGenre == 5) {
 
                         Intent intent = new Intent(getApplicationContext(), FavoriteListActivity.class);
                         startActivity(intent);
                         return true;
 
-
                     }
-
-                    // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
-                    mQuestionArrayList.clear();
-                    mAdapter.setQuestionArrayList(mQuestionArrayList);
-                    mListView.setAdapter(mAdapter);
 
                     // 選択したジャンルにリスナーを登録する
                     if (mGenreRef != null) {
