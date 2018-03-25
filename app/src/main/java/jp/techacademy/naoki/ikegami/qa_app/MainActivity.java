@@ -171,8 +171,27 @@ public class MainActivity extends AppCompatActivity {
 
             // ナビゲーションドロワーの設定
             DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name);
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name){
 
+                 public void onDrawerOpened(View drawerView) {
+                     NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                     Menu menu = navigationView.getMenu();
+                     MenuItem item = menu.findItem(R.id.nav_favorite);
+
+                     // ログイン済みのユーザーを取得する
+                     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                     // ログインしていなければ、ドロワーにお気に入り一覧を表示しない
+                     if (user == null) {
+                         item.setVisible(false);
+                     } else {
+                         item.setVisible(true);
+                     }
+
+                     invalidateOptionsMenu();
+                 }
+
+
+                 };
 
 
             drawer.addDrawerListener(toggle);

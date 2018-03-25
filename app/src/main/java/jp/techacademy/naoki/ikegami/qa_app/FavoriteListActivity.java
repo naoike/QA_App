@@ -78,6 +78,12 @@ public class FavoriteListActivity extends AppCompatActivity {
             }
 
             Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
+
+            //favoriteMapの中に存在しているデータのみmQuestionArrayListにaddする
+
+
+
+
             mQuestionArrayList.add(question);
             mAdapter.notifyDataSetChanged();
         }
@@ -200,10 +206,16 @@ public class FavoriteListActivity extends AppCompatActivity {
             }
         });
 
+
+        // Firebase
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+
+
         for (int i = 0; i<=4; i++) {
             mGenre = i;
             mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
             mGenreRef.addChildEventListener(mEventListener);
+
 
         }
 
