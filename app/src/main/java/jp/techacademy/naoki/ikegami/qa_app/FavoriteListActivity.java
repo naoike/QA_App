@@ -51,6 +51,8 @@ public class FavoriteListActivity extends AppCompatActivity {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
+            if (favoriteMap.containsKey(dataSnapshot.getKey())) {
+
             String title = (String) map.get("title");
             String body = (String) map.get("body");
             String name = (String) map.get("name");
@@ -79,13 +81,10 @@ public class FavoriteListActivity extends AppCompatActivity {
 
             Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
 
-            //favoriteMapの中に存在しているデータのみmQuestionArrayListにaddする
-
-
-
 
             mQuestionArrayList.add(question);
             mAdapter.notifyDataSetChanged();
+            }
         }
 
         @Override
